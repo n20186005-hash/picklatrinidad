@@ -1,0 +1,578 @@
+---
+import '../styles/global.css';
+
+const place = {
+  name: 'Strawberry Farm - Home of Giant Strawberry Cake',
+  shortName: 'Strawberry Farm',
+  address: 'Swamp Area, ID-58, Strawberry Valley Hotel, Strawberry Farm Rd, La Trinidad, 2601 Benguet, Philippines',
+  latitude: 16.4580848,
+  longitude: 120.5877882,
+  rating: 4.3,
+  ratingCount: 4093,
+  opens: '06:00',
+  closes: '18:00'
+};
+
+const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : undefined;
+const socialImageUrl = Astro.site ? new URL('/images/field-valley.webp', Astro.site).toString() : undefined;
+
+const faqs = [
+  {
+    question: 'When is the best time to pick strawberries?',
+    answer: 'Cool, dry-season mornings are the easiest time to visit. February to April is often a strong picking window, but harvest volume depends on weather, field rotation and the day’s crop. Arrive early and ask growers what is available before paying for a picking basket.'
+  },
+  {
+    question: 'Is there an entrance fee?',
+    answer: 'Walking around the wider farm and market area is commonly free. Small local, environmental or activity fees may be collected at some access points, and strawberry picking is charged separately by weight. Confirm the day’s arrangement onsite.'
+  },
+  {
+    question: 'How much does strawberry picking cost?',
+    answer: 'Picking is priced by weight and can change by grower, season and supply. Recent visitor reports commonly mention roughly ₱500–₱700 per kilogram as an indicative range, but it should not be treated as a fixed official rate.'
+  },
+  {
+    question: 'How long should I spend at the farm?',
+    answer: 'Allow about 1.5–2.5 hours if you want to pick, browse the pasalubong stalls, snack and take photos. A quick market-and-photo stop can fit into roughly an hour.'
+  },
+  {
+    question: 'Can I visit without picking strawberries?',
+    answer: 'Yes. You can still walk the farm area, shop for fresh berries and local products, try strawberry snacks and enjoy the Cordillera valley scenery without joining a pick-your-own activity.'
+  },
+  {
+    question: 'Is parking available?',
+    answer: 'Parking is available around the farm area, but spaces can fill quickly on weekends, holidays and peak strawberry-season mornings. Paid parking may apply depending on the lot, so bring small cash and arrive early if driving.'
+  }
+];
+
+const placeSchema = {
+  '@context': 'https://schema.org',
+  '@type': ['TouristAttraction', 'LocalBusiness'],
+  name: place.name,
+  description: 'Independent visitor guide to La Trinidad Strawberry Farm in Benguet, known for strawberry picking, fresh produce, local pasalubong and the Giant Strawberry Cake tradition.',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Strawberry Farm Rd, Barangay Betag',
+    addressLocality: 'La Trinidad',
+    addressRegion: 'Benguet',
+    postalCode: '2601',
+    addressCountry: 'PH'
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: place.latitude,
+    longitude: place.longitude
+  },
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+      opens: place.opens,
+      closes: place.closes
+    }
+  ],
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: place.rating,
+    ratingCount: place.ratingCount,
+    bestRating: 5
+  },
+  ...(canonicalUrl ? { url: canonicalUrl } : {}),
+  ...(socialImageUrl ? { image: [socialImageUrl] } : {})
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer
+    }
+  }))
+};
+
+const saveableStops = [
+  { id: 'farm-picking', name: 'Pick strawberries', meta: 'Strawberry Farm · Betag' },
+  { id: 'farm-market', name: 'Browse the pasalubong market', meta: 'Strawberry Farm · Betag' },
+  { id: 'red-berry-cafe', name: 'Red Berry Cafe', meta: 'Near the Orchidarium' },
+  { id: 'kabunian-cafe', name: 'Kabunian Cafe & Restaurant', meta: 'Strawberry Farm Road' },
+  { id: 'mt-kalugong', name: 'Mt. Kalugong Cultural Village', meta: 'La Trinidad side trip' },
+  { id: 'mt-yangbew', name: 'Mt. Yangbew', meta: 'Short ridge hike' },
+  { id: 'mount-costa', name: 'Mount Costa', meta: 'Garden side trip' }
+];
+---
+<!doctype html>
+<html lang="en-PH">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="theme-color" content="#fffaf0" />
+    <meta name="description" content="Plan a visit to Strawberry Farm in La Trinidad, Benguet: strawberry picking, costs, parking, transport, food, nearby sights, photo gallery and a private on-device itinerary." />
+    <meta name="robots" content="index,follow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_PH" />
+    <meta property="og:title" content="Strawberry Farm La Trinidad — Visitor Guide" />
+    <meta property="og:description" content="A field-side guide to strawberry picking, local food, transport and the best stops around La Trinidad's Strawberry Farm." />
+    <meta property="og:image" content={socialImageUrl ?? '/images/field-valley.webp'} />
+    {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Strawberry Farm La Trinidad — Visitor Guide" />
+    <meta name="twitter:description" content="A practical, independent guide to La Trinidad Strawberry Farm in Benguet." />
+    <meta name="twitter:image" content={socialImageUrl ?? '/images/field-valley.webp'} />
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>Strawberry Farm La Trinidad — Picking, Food & Visitor Guide</title>
+    <script type="application/ld+json" set:html={JSON.stringify(placeSchema)}></script>
+    <script type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-HXM22WWPKP"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-HXM22WWPKP');
+    </script>
+  </head>
+  <body class="paper-grain antialiased">
+    <a href="#main" class="sr-only focus:not-sr-only fixed left-4 top-4 z-[100] rounded-full bg-ink px-4 py-2 text-sm font-bold text-white">Skip to content</a>
+
+    <header class="relative z-50 border-b border-soil-700/15 bg-cream/92 backdrop-blur-xl">
+      <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-5 py-3 lg:px-8">
+        <a href="#top" class="shrink-0" aria-label="Strawberry Farm visitor guide home">
+          <img src="/logo.svg" width="270" height="64" alt="Strawberry Farm La Trinidad" class="h-14 w-auto" />
+        </a>
+        <nav aria-label="Primary" class="hidden items-center gap-1 text-sm font-semibold text-soil-700 lg:flex">
+          <a href="#visit" class="rounded-full px-3 py-2 hover:bg-leaf-100">Plan visit</a>
+          <a href="#getting-there" class="rounded-full px-3 py-2 hover:bg-leaf-100">Getting there</a>
+          <a href="#nearby" class="rounded-full px-3 py-2 hover:bg-leaf-100">Nearby</a>
+          <a href="#gallery" class="rounded-full px-3 py-2 hover:bg-leaf-100">Photos</a>
+          <a href="#faq" class="rounded-full px-3 py-2 hover:bg-leaf-100">FAQ</a>
+        </nav>
+        <button type="button" data-itinerary-open class="flex items-center gap-2 rounded-full border border-leaf-700/20 bg-leaf-700 px-4 py-2.5 text-sm font-bold text-cream shadow-sm hover:bg-leaf-600" aria-controls="itinerary-panel">
+          <span aria-hidden="true">✓</span>
+          Day list <span data-itinerary-count class="rounded-full bg-cream/15 px-2 py-0.5 text-xs">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section id="top" class="mountain-rule relative overflow-hidden bg-leaf-700 text-cream">
+        <div class="absolute inset-0 opacity-35" aria-hidden="true" style="background:radial-gradient(circle at 18% 20%, #d7433b 0 2px, transparent 3px) 0 0/28px 28px"></div>
+        <div class="relative mx-auto grid min-h-[760px] max-w-7xl items-center gap-10 px-5 pb-24 pt-12 lg:grid-cols-[0.88fr_1.12fr] lg:px-8 lg:pt-16">
+          <div class="relative z-10 py-8 lg:py-16">
+            <div class="mb-5 inline-flex items-center gap-3 rounded-full border border-white/20 bg-white/8 px-4 py-2 text-sm font-semibold tracking-wide">
+              <span class="berry-dot scale-75" aria-hidden="true"></span>
+              La Trinidad · Benguet · Philippines
+            </div>
+            <p class="mb-3 text-xs font-black uppercase tracking-[0.28em] text-berry-200">A valley you can taste</p>
+            <h1 class="max-w-2xl font-display text-5xl font-bold leading-[0.98] tracking-[-0.035em] sm:text-6xl lg:text-7xl">
+              Pick the morning.<br /><span class="text-berry-200">Take home the berries.</span>
+            </h1>
+            <p class="mt-7 max-w-xl text-lg leading-8 text-cream/80">
+              Strawberry rows, cool Cordillera air, warm taho and a market full of red. This independent field guide helps you make a simple La Trinidad farm morning feel unhurried.
+            </p>
+            <div class="mt-8 flex flex-wrap gap-3">
+              <a href="#visit" class="rounded-full bg-berry-500 px-6 py-3.5 font-bold text-white shadow-lg shadow-black/15 hover:bg-berry-600">Plan your farm morning</a>
+              <a href="#gallery" class="rounded-full border border-cream/25 bg-cream/8 px-6 py-3.5 font-bold text-cream hover:bg-cream/15">See real photos</a>
+            </div>
+            <dl class="mt-10 grid max-w-xl grid-cols-3 gap-3 border-t border-white/15 pt-6">
+              <div><dt class="text-xs uppercase tracking-wider text-cream/55">Google rating</dt><dd class="mt-1 font-display text-2xl font-bold">4.3 ★</dd></div>
+              <div><dt class="text-xs uppercase tracking-wider text-cream/55">Listed hours</dt><dd class="mt-1 font-display text-2xl font-bold">6–6</dd></div>
+              <div><dt class="text-xs uppercase tracking-wider text-cream/55">Good stay</dt><dd class="mt-1 font-display text-2xl font-bold">1.5–2.5h</dd></div>
+            </dl>
+          </div>
+
+          <div class="relative min-h-[490px] lg:min-h-[610px]">
+            <figure class="absolute inset-x-8 top-3 overflow-hidden rounded-[2.6rem] border-[10px] border-cream shadow-2xl shadow-black/30 sm:inset-x-16 lg:inset-x-4 lg:left-16 lg:right-0">
+              <img src="/images/field-valley.webp" width="1800" height="1350" alt="Strawberry fields and mountain slopes in La Trinidad" class="h-[430px] w-full object-cover sm:h-[500px] lg:h-[560px]" fetchpriority="high" />
+            </figure>
+            <div class="absolute bottom-4 left-0 rotate-[-4deg] rounded-2xl bg-cream px-5 py-4 text-ink shadow-xl sm:left-8 lg:left-0">
+              <p class="text-xs font-black uppercase tracking-[0.2em] text-berry-600">Field note</p>
+              <p class="mt-1 font-display text-xl font-bold">Go early. Pick gently.</p>
+              <p class="mt-1 max-w-[240px] text-sm leading-5 text-soil-700">Cooler air, softer light, and a better chance to find active picking rows.</p>
+            </div>
+            <div class="absolute right-0 top-0 rounded-full border-4 border-cream bg-berry-500 px-5 py-5 text-center text-sm font-black leading-4 text-white shadow-lg sm:right-6 lg:-right-5">
+              HOME OF<br /><span class="font-display text-lg">GIANT</span><br />STRAWBERRY<br />CAKE
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24" aria-labelledby="story-heading">
+        <div class="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.28em] text-berry-600">Why this place feels different</p>
+            <h2 id="story-heading" class="mt-3 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">Not a theme park.<br />A working valley.</h2>
+            <p class="mt-6 text-lg leading-8 text-soil-700">The Strawberry Farm sits in Betag, La Trinidad, where agriculture and tourism overlap. Visitors come for pick-your-own rows, but the farm’s character is just as much in the roadside stalls: berries, preserves, vegetables, woven goods and strawberry-flavoured pasalubong.</p>
+            <p class="mt-4 leading-7 text-soil-700">The “Giant Strawberry Cake” name points to La Trinidad’s celebrated strawberry-cake tradition. Treat it as part of the town’s identity rather than expecting a giant cake to be on permanent display every day.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4 sm:gap-5">
+            <figure class="overflow-hidden rounded-[2rem] shadow-[var(--shadow-soft)]"><img src="/images/strawberry-picking.webp" width="1800" height="1200" alt="Visitors picking strawberries from farm rows" class="h-full min-h-[380px] w-full object-cover" loading="lazy" /></figure>
+            <div class="grid gap-4 sm:gap-5">
+              <figure class="overflow-hidden rounded-[2rem] shadow-[var(--shadow-soft)]"><img src="/images/strawberry-landmark.webp" width="1054" height="1400" alt="Giant strawberry landmark in La Trinidad" class="h-52 w-full object-cover sm:h-64" loading="lazy" /></figure>
+              <div class="rounded-[2rem] bg-berry-500 p-6 text-white shadow-[var(--shadow-soft)] sm:p-8">
+                <p class="font-display text-3xl font-bold">Strawberry & Rose Capital</p>
+                <p class="mt-3 leading-6 text-white/80">La Trinidad’s farm identity makes this stop feel rooted in the valley, not staged around a single photo spot.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="visit" class="border-y border-soil-700/10 bg-white/45 py-16 lg:py-24">
+        <div class="mx-auto max-w-7xl px-5 lg:px-8">
+          <div class="max-w-3xl">
+            <p class="text-xs font-black uppercase tracking-[0.28em] text-berry-600">Plan the visit</p>
+            <h2 class="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">A practical field card for the day</h2>
+            <p class="mt-4 text-lg leading-8 text-soil-700">Rates and crop availability change, so the most useful plan is to know what is stable—and what to confirm when you arrive.</p>
+          </div>
+
+          <div class="mt-10 grid gap-5 lg:grid-cols-12">
+            <article class="field-card rounded-[2rem] p-7 lg:col-span-5">
+              <div class="flex items-start justify-between gap-5">
+                <div><p class="text-xs font-black uppercase tracking-[0.2em] text-leaf-600">Opening & timing</p><h3 class="mt-2 font-display text-3xl font-bold">Start with the cool air.</h3></div>
+                <span class="rounded-full bg-leaf-100 px-3 py-1 text-sm font-bold text-leaf-700">Daily listing</span>
+              </div>
+              <dl class="mt-7 divide-y divide-soil-700/10">
+                <div class="flex justify-between gap-4 py-4"><dt class="text-soil-700">Listed opening hours</dt><dd class="font-bold">6:00 AM–6:00 PM</dd></div>
+                <div class="flex justify-between gap-4 py-4"><dt class="text-soil-700">Best arrival</dt><dd class="text-right font-bold">Early morning</dd></div>
+                <div class="flex justify-between gap-4 py-4"><dt class="text-soil-700">Strong picking window</dt><dd class="text-right font-bold">Often Feb–Apr*</dd></div>
+                <div class="flex justify-between gap-4 py-4"><dt class="text-soil-700">Suggested stay</dt><dd class="font-bold">1.5–2.5 hours</dd></div>
+              </dl>
+              <p class="mt-4 text-sm leading-6 text-soil-700">*Harvest is weather- and crop-dependent. A good season does not guarantee every row is open for picking on a particular day.</p>
+            </article>
+
+            <article class="ticket-edge rounded-[2rem] bg-berry-500 p-7 text-white shadow-[var(--shadow-lift)] lg:col-span-4">
+              <p class="text-xs font-black uppercase tracking-[0.2em] text-berry-100">Tickets / costs</p>
+              <h3 class="mt-2 font-display text-3xl font-bold">Pay for what you pick.</h3>
+              <div class="mt-7 space-y-5">
+                <div class="border-b border-white/20 pb-5"><p class="text-sm text-white/70">Wider farm / market area</p><p class="mt-1 text-2xl font-black">Commonly free to enter</p></div>
+                <div class="border-b border-white/20 pb-5"><p class="text-sm text-white/70">Pick-your-own strawberries</p><p class="mt-1 text-2xl font-black">Priced by weight</p><p class="mt-1 text-sm text-white/75">Recent visitor reports often mention ~₱500–₱700/kg as an indicative range, not a fixed official price.</p></div>
+                <div><p class="text-sm text-white/70">Small local / activity fees</p><p class="mt-1 font-bold">May apply at some access points</p></div>
+              </div>
+              <p class="mt-6 rounded-2xl bg-black/10 p-4 text-sm leading-6">Bring small cash. Ask the grower for the day’s price before you start picking.</p>
+            </article>
+
+            <article class="field-card rounded-[2rem] p-7 lg:col-span-3">
+              <p class="text-xs font-black uppercase tracking-[0.2em] text-leaf-600">Parking</p>
+              <h3 class="mt-2 font-display text-3xl font-bold">Early wheels win.</h3>
+              <p class="mt-5 leading-7 text-soil-700">Parking is available around the farm area, but the easiest slots disappear first on weekends, holidays and busy picking mornings.</p>
+              <ul class="mt-6 space-y-3 text-sm leading-6 text-soil-700">
+                <li class="flex gap-3"><span aria-hidden="true">●</span><span>Paid parking may apply depending on the lot.</span></li>
+                <li class="flex gap-3"><span aria-hidden="true">●</span><span>Keep small cash ready.</span></li>
+                <li class="flex gap-3"><span aria-hidden="true">●</span><span>Avoid blocking farm access roads while waiting.</span></li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="getting-there" class="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">
+        <div class="grid gap-10 lg:grid-cols-[0.86fr_1.14fr]">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.28em] text-berry-600">Detailed transport</p>
+            <h2 class="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">From Baguio, follow the valley north.</h2>
+            <p class="mt-5 text-lg leading-8 text-soil-700">The farm is close enough for a Baguio half-day, but traffic on the Baguio–La Trinidad corridor can change the feel of the trip. Build in breathing room.</p>
+
+            <div class="mt-8 space-y-4">
+              <article class="rounded-[1.6rem] border border-soil-700/15 bg-cream p-6">
+                <div class="flex items-center gap-4"><span class="grid h-11 w-11 place-items-center rounded-full bg-leaf-700 font-black text-cream">01</span><div><p class="text-xs font-black uppercase tracking-wider text-leaf-600">Easiest</p><h3 class="font-display text-2xl font-bold">Taxi / Grab</h3></div></div>
+                <p class="mt-4 leading-7 text-soil-700">From central Baguio, set the destination to Strawberry Farm, Betag, La Trinidad. A typical run can be around 20–30 minutes when traffic is moving, but peak traffic can make it longer. Ask to be dropped by the farm entrance / Strawberry Farm Road.</p>
+              </article>
+              <article class="rounded-[1.6rem] border border-soil-700/15 bg-cream p-6">
+                <div class="flex items-center gap-4"><span class="grid h-11 w-11 place-items-center rounded-full bg-berry-500 font-black text-white">02</span><div><p class="text-xs font-black uppercase tracking-wider text-berry-600">Budget</p><h3 class="font-display text-2xl font-bold">La Trinidad jeepney</h3></div></div>
+                <p class="mt-4 leading-7 text-soil-700">Look for La Trinidad-bound jeepneys around the Magsaysay / Baguio Center Mall area. Tell the driver you are going to Strawberry Farm in Betag so you do not end up on a route that turns away earlier. From the drop-off, expect a short walk into the farm area.</p>
+              </article>
+              <article class="rounded-[1.6rem] border border-soil-700/15 bg-cream p-6">
+                <div class="flex items-center gap-4"><span class="grid h-11 w-11 place-items-center rounded-full bg-soil-700 font-black text-cream">03</span><div><p class="text-xs font-black uppercase tracking-wider text-soil-700">Flexible</p><h3 class="font-display text-2xl font-bold">Private car</h3></div></div>
+                <p class="mt-4 leading-7 text-soil-700">Follow the Baguio–La Trinidad–Bontoc Road, then the local approach into Strawberry Farm Road. Use the map pin below for the final turn. Arrive early if you want easier parking and a calmer walk between the stalls.</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="lg:sticky lg:top-24 lg:self-start">
+            <div class="overflow-hidden rounded-[2.2rem] border-[6px] border-white bg-white shadow-[var(--shadow-lift)]">
+              <iframe
+                title="Map of Strawberry Farm in La Trinidad, Benguet"
+                src="https://www.google.com/maps?q=16.4580848%2C120.5877882&z=16&hl=en&gl=ph&output=embed"
+                width="100%"
+                height="560"
+                style="border:0"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen></iframe>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 px-2 text-sm text-soil-700">
+              <span>16.4580848, 120.5877882 · Barangay Betag</span>
+              <a href="https://maps.app.goo.gl/Kof8tjQ4s5DdZfnL7" rel="noopener noreferrer" class="font-bold text-berry-600 underline decoration-berry-200 underline-offset-4">Open supplied map →</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="overflow-hidden bg-leaf-700 py-16 text-cream lg:py-24" aria-labelledby="taste-heading">
+        <div class="mx-auto max-w-7xl px-5 lg:px-8">
+          <div class="grid gap-10 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+            <figure class="relative">
+              <img src="/images/strawberry-landmark.webp" width="1054" height="1400" alt="Giant strawberry landmark celebrating La Trinidad’s berry identity" class="h-[480px] w-full rounded-[2.5rem] border-8 border-cream object-cover shadow-2xl shadow-black/20" loading="lazy" />
+              <figcaption class="absolute -bottom-5 right-5 rotate-2 rounded-xl bg-berry-500 px-4 py-3 font-display text-lg font-bold text-white shadow-lg">Bring a little red home.</figcaption>
+            </figure>
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.28em] text-berry-200">What to taste</p>
+              <h2 id="taste-heading" class="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">The farm stop is half picking, half pasalubong.</h2>
+              <p class="mt-5 text-lg leading-8 text-cream/75">Even when picking is limited, there is plenty to eat and bring home. Look for fresh berries, strawberry taho, preserves, jams, ice cream, baked snacks and seasonal produce from the valley.</p>
+              <div class="mt-8 grid grid-cols-2 gap-3 text-sm font-bold sm:grid-cols-3">
+                {['Fresh berries', 'Strawberry taho', 'Jam & preserves', 'Local vegetables', 'Baked treats', 'Souvenir stalls'].map((item) => <div class="rounded-full border border-white/15 bg-white/8 px-4 py-3 text-center">{item}</div>)}
+              </div>
+              <button type="button" class="save-button mt-8 rounded-full border border-cream/30 bg-cream px-5 py-3 font-bold text-leaf-700" data-save-item data-id="farm-market" data-name="Browse the pasalubong market" data-meta="Strawberry Farm · Betag">＋ Add market stop to day list</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="nearby" class="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">
+        <div class="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <div class="max-w-3xl"><p class="text-xs font-black uppercase tracking-[0.28em] text-berry-600">Nearby food & side trips</p><h2 class="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">Make a half-day of La Trinidad.</h2></div>
+          <p class="max-w-md leading-7 text-soil-700">Pair the farm with one meal and one ridge or garden stop. It keeps the route simple and gives the valley room to breathe.</p>
+        </div>
+
+        <div class="mt-10 grid gap-5 lg:grid-cols-2">
+          <div class="rounded-[2rem] bg-berry-100/60 p-7 sm:p-8">
+            <div class="flex items-center justify-between"><div><p class="text-xs font-black uppercase tracking-[0.2em] text-berry-600">Nearby food</p><h3 class="mt-2 font-display text-3xl font-bold">Eat close to the fields</h3></div><span class="text-3xl" aria-hidden="true">🍓</span></div>
+            <div class="mt-6 divide-y divide-berry-700/10">
+              <article class="py-5 first:pt-0"><div class="flex justify-between gap-4"><div><h4 class="font-bold">Kabunian Cafe & Restaurant</h4><p class="mt-1 text-sm text-soil-700">Strawberry Farm Road · convenient after the market</p></div><button type="button" class="save-button h-fit rounded-full border border-berry-700/20 bg-white px-3 py-2 text-xs font-bold" data-save-item data-id="kabunian-cafe" data-name="Kabunian Cafe & Restaurant" data-meta="Strawberry Farm Road">＋ Save</button></div></article>
+              <article class="py-5"><div class="flex justify-between gap-4"><div><h4 class="font-bold">Red Berry Cafe</h4><p class="mt-1 text-sm text-soil-700">Near the Orchidarium · easy coffee / snack stop</p></div><button type="button" class="save-button h-fit rounded-full border border-berry-700/20 bg-white px-3 py-2 text-xs font-bold" data-save-item data-id="red-berry-cafe" data-name="Red Berry Cafe" data-meta="Near the Orchidarium">＋ Save</button></div></article>
+              <article class="py-5"><h4 class="font-bold">Dap-ayan Restaurant III</h4><p class="mt-1 text-sm text-soil-700">KM6 Betag · straightforward local meal option</p></article>
+              <article class="pt-5"><h4 class="font-bold">Vintage Kitchen & Drinks</h4><p class="mt-1 text-sm text-soil-700">La Trinidad · a more sit-down finish to the farm visit</p></article>
+            </div>
+          </div>
+
+          <div class="rounded-[2rem] bg-leaf-100/80 p-7 sm:p-8">
+            <div class="flex items-center justify-between"><div><p class="text-xs font-black uppercase tracking-[0.2em] text-leaf-600">Nearby attractions</p><h3 class="mt-2 font-display text-3xl font-bold">Add one change of altitude</h3></div><span class="text-3xl" aria-hidden="true">⛰</span></div>
+            <div class="mt-6 divide-y divide-leaf-700/10">
+              <article class="py-5 first:pt-0"><div class="flex justify-between gap-4"><div><h4 class="font-bold">Mt. Kalugong Cultural Village</h4><p class="mt-1 text-sm text-soil-700">Rock formations, Cordillera views and a cultural-village atmosphere.</p></div><button type="button" class="save-button h-fit rounded-full border border-leaf-700/20 bg-white px-3 py-2 text-xs font-bold" data-save-item data-id="mt-kalugong" data-name="Mt. Kalugong Cultural Village" data-meta="La Trinidad side trip">＋ Save</button></div></article>
+              <article class="py-5"><div class="flex justify-between gap-4"><div><h4 class="font-bold">Mt. Yangbew</h4><p class="mt-1 text-sm text-soil-700">A short ridge hike with open valley views; best if you still have energy.</p></div><button type="button" class="save-button h-fit rounded-full border border-leaf-700/20 bg-white px-3 py-2 text-xs font-bold" data-save-item data-id="mt-yangbew" data-name="Mt. Yangbew" data-meta="Short ridge hike">＋ Save</button></div></article>
+              <article class="pt-5"><div class="flex justify-between gap-4"><div><h4 class="font-bold">Mount Costa</h4><p class="mt-1 text-sm text-soil-700">Landscaped gardens for a slower, more polished afternoon stop.</p></div><button type="button" class="save-button h-fit rounded-full border border-leaf-700/20 bg-white px-3 py-2 text-xs font-bold" data-save-item data-id="mount-costa" data-name="Mount Costa" data-meta="Garden side trip">＋ Save</button></div></article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="border-y border-soil-700/10 bg-white/45 py-16 lg:py-24" aria-labelledby="rhythm-heading">
+        <div class="mx-auto max-w-7xl px-5 lg:px-8">
+          <div class="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-start">
+            <div><p class="text-xs font-black uppercase tracking-[0.28em] text-berry-600">Best time / suggested duration</p><h2 id="rhythm-heading" class="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">A two-hour farm rhythm.</h2><p class="mt-5 text-lg leading-8 text-soil-700">You do not need a packed schedule. The best version is a sequence of small things done before the road gets busy.</p></div>
+            <ol class="grid gap-4 sm:grid-cols-2">
+              <li class="rounded-[1.6rem] border border-soil-700/15 bg-cream p-6"><p class="text-xs font-black uppercase tracking-wider text-berry-600">First 20 min</p><h3 class="mt-2 font-display text-2xl font-bold">Walk before you buy.</h3><p class="mt-3 text-sm leading-6 text-soil-700">Check which fields are open, ask the day’s picking price, and look at the crop before committing.</p></li>
+              <li class="rounded-[1.6rem] border border-soil-700/15 bg-cream p-6"><p class="text-xs font-black uppercase tracking-wider text-berry-600">Next 45–60 min</p><h3 class="mt-2 font-display text-2xl font-bold">Pick slowly.</h3><p class="mt-3 text-sm leading-6 text-soil-700">Choose fully red fruit, support the berry, and follow the grower’s instructions so plants are not damaged.</p><button type="button" class="save-button mt-4 rounded-full border border-soil-700/20 bg-white px-3 py-2 text-xs font-bold" data-save-item data-id="farm-picking" data-name="Pick strawberries" data-meta="Strawberry Farm · Betag">＋ Save picking</button></li>
+              <li class="rounded-[1.6rem] border border-soil-700/15 bg-cream p-6"><p class="text-xs font-black uppercase tracking-wider text-leaf-600">Next 30–40 min</p><h3 class="mt-2 font-display text-2xl font-bold">Snack & browse.</h3><p class="mt-3 text-sm leading-6 text-soil-700">Try strawberry taho or a dessert, then compare jams, produce and souvenirs before buying.</p></li>
+              <li class="rounded-[1.6rem] border border-soil-700/15 bg-cream p-6"><p class="text-xs font-black uppercase tracking-wider text-leaf-600">Last 20 min</p><h3 class="mt-2 font-display text-2xl font-bold">Pack for the road.</h3><p class="mt-3 text-sm leading-6 text-soil-700">Keep fresh berries shaded and upright, then leave before the warmest, busiest part of the day if you have another stop.</p></li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="gallery" class="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">
+        <div class="mb-10 max-w-3xl"><p class="text-xs font-black uppercase tracking-[0.28em] text-berry-600">Photo wall</p><h2 class="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">Red rows, green hills, market mornings.</h2><p class="mt-4 text-lg leading-8 text-soil-700">Real photographs of the farm experience, stored locally in the project. Select any image to open it larger.</p></div>
+        <div class="grid auto-rows-[190px] grid-cols-2 gap-3 sm:auto-rows-[230px] sm:grid-cols-4 lg:auto-rows-[260px]">
+          <button class="gallery-tile col-span-2 row-span-2 overflow-hidden rounded-[2rem] text-left" data-gallery-image="/images/field-valley.webp" data-gallery-alt="Wide view of La Trinidad strawberry fields and mountain slopes"><img src="/images/field-valley.webp" width="1800" height="1350" alt="Wide view of La Trinidad strawberry fields and mountain slopes" class="h-full w-full object-cover" loading="lazy" /></button>
+          <button class="gallery-tile row-span-2 overflow-hidden rounded-[2rem] text-left" data-gallery-image="/images/strawberry-picking.webp" data-gallery-alt="Visitors picking strawberries in La Trinidad"><img src="/images/strawberry-picking.webp" width="1800" height="1200" alt="Visitors picking strawberries in La Trinidad" class="h-full w-full object-cover" loading="lazy" /></button>
+          <button class="gallery-tile overflow-hidden rounded-[2rem] text-left" data-gallery-image="/images/strawberry-landmark.webp" data-gallery-alt="Giant strawberry landmark in La Trinidad"><img src="/images/strawberry-landmark.webp" width="1054" height="1400" alt="Giant strawberry landmark in La Trinidad" class="h-full w-full object-cover" loading="lazy" /></button>
+          <button class="gallery-tile overflow-hidden rounded-[2rem] text-left" data-gallery-image="/images/festival-street.webp" data-gallery-alt="Festival Street beside the La Trinidad strawberry fields"><img src="/images/festival-street.webp" width="1800" height="1355" alt="Festival Street beside the La Trinidad strawberry fields" class="h-full w-full object-cover" loading="lazy" /></button>
+          <button class="gallery-tile col-span-2 overflow-hidden rounded-[2rem] text-left" data-gallery-image="/images/raised-rows.webp" data-gallery-alt="Raised strawberry rows at a La Trinidad farm plot"><img src="/images/raised-rows.webp" width="1800" height="1355" alt="Raised strawberry rows at a La Trinidad farm plot" class="h-full w-full object-cover" loading="lazy" /></button>
+        </div>
+      </section>
+
+      <section id="faq" class="bg-soil-100/55 py-16 lg:py-24">
+        <div class="mx-auto max-w-5xl px-5 lg:px-8">
+          <div class="text-center"><p class="text-xs font-black uppercase tracking-[0.28em] text-berry-600">FAQ</p><h2 class="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">Before you head to the rows</h2></div>
+          <div class="mt-10 divide-y divide-soil-700/15 border-y border-soil-700/15">
+            {faqs.map((faq) => (
+              <details class="group py-5">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-2 font-display text-xl font-bold sm:text-2xl"><span>{faq.question}</span><span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-berry-600 transition-transform group-open:rotate-45" aria-hidden="true">＋</span></summary>
+                <p class="max-w-3xl pb-3 pr-12 pt-3 leading-7 text-soil-700">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-berry-500 py-16 text-white">
+        <div class="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-5 lg:flex-row lg:items-center lg:px-8">
+          <div class="max-w-2xl"><p class="text-xs font-black uppercase tracking-[0.28em] text-berry-100">Ready for the valley?</p><h2 class="mt-3 font-display text-4xl font-bold">Keep the day simple: farm, food, one good view.</h2><p class="mt-4 text-white/75">Save the stops you want. Your list stays on this device and is never uploaded.</p></div>
+          <button type="button" data-itinerary-open class="rounded-full bg-white px-6 py-3.5 font-bold text-berry-700 shadow-lg">Open my day list <span aria-hidden="true">→</span></button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-ink py-10 text-cream/70">
+      <div class="mx-auto grid max-w-7xl gap-8 px-5 lg:grid-cols-[1fr_auto] lg:px-8">
+        <div>
+          <img src="/logo.svg" width="270" height="64" alt="Strawberry Farm La Trinidad" class="h-14 w-auto rounded-xl bg-cream px-3 py-1" loading="lazy" />
+          <p class="mt-5 max-w-2xl text-sm leading-6">This is an independent visitor guide and is not the official website of Benguet State University, the Municipality of La Trinidad, or the Strawberry Farm operators.</p>
+          <p class="mt-2 max-w-2xl text-xs leading-5 text-cream/45">Operating hours, crop availability, activity fees, parking arrangements and market prices can change. Confirm time-sensitive details onsite before relying on them.</p>
+        </div>
+        <div class="text-sm lg:text-right"><p class="font-bold text-cream">Strawberry Farm · Barangay Betag</p><p class="mt-2">La Trinidad, Benguet 2601 · Philippines</p><p class="mt-2">16.4580848, 120.5877882</p></div>
+      </div>
+    </footer>
+
+    <dialog id="gallery-dialog" class="m-auto max-h-[92vh] w-[min(94vw,1100px)] rounded-[2rem] bg-transparent p-0 backdrop:bg-ink/85">
+      <div class="relative overflow-hidden rounded-[2rem] bg-ink shadow-2xl">
+        <button id="gallery-close" type="button" class="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/90 text-xl font-black text-ink shadow" aria-label="Close photo">×</button>
+        <img id="gallery-dialog-image" src="/images/field-valley.webp" alt="" class="max-h-[88vh] w-full object-contain" />
+      </div>
+    </dialog>
+
+    <div id="itinerary-backdrop" class="pointer-events-none fixed inset-0 z-[80] bg-ink/45 opacity-0 transition-opacity" aria-hidden="true"></div>
+    <aside id="itinerary-panel" class="fixed bottom-0 right-0 top-0 z-[90] flex w-full max-w-md translate-x-full flex-col bg-cream shadow-2xl transition-transform" aria-label="My day list" aria-hidden="true">
+      <div class="flex items-center justify-between border-b border-soil-700/15 p-5">
+        <div><p class="text-xs font-black uppercase tracking-[0.2em] text-berry-600">On this device only</p><h2 class="mt-1 font-display text-3xl font-bold">My farm day</h2></div>
+        <button type="button" data-itinerary-close class="grid h-11 w-11 place-items-center rounded-full border border-soil-700/15 bg-white text-xl" aria-label="Close day list">×</button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-5">
+        <p class="text-sm leading-6 text-soil-700">Saved stops are kept in your browser using localStorage. Nothing is sent to a server.</p>
+        <div id="itinerary-items" class="mt-6 space-y-3"></div>
+        <div id="itinerary-empty" class="mt-8 rounded-[1.5rem] border border-dashed border-soil-700/25 p-8 text-center"><p class="font-display text-2xl font-bold">Nothing saved yet.</p><p class="mt-2 text-sm leading-6 text-soil-700">Use the “Save” buttons around the guide to build a compact La Trinidad day.</p></div>
+      </div>
+      <div class="border-t border-soil-700/15 p-5"><button id="itinerary-clear" type="button" class="w-full rounded-full border border-berry-700/20 bg-white px-5 py-3 font-bold text-berry-700">Clear my list</button></div>
+    </aside>
+
+    <script id="saveable-stops-data" type="application/json" set:html={JSON.stringify(saveableStops)}></script>
+    <script>
+      type SavedStop = { id: string; name: string; meta: string };
+
+      const STORAGE_KEY = 'la-trinidad-strawberry-farm-day-list-v1';
+      const stopsData = document.querySelector<HTMLScriptElement>('#saveable-stops-data')?.textContent ?? '[]';
+      const allStops = JSON.parse(stopsData) as SavedStop[];
+      const panel = document.querySelector<HTMLElement>('#itinerary-panel');
+      const backdrop = document.querySelector<HTMLElement>('#itinerary-backdrop');
+      const itemsRoot = document.querySelector<HTMLElement>('#itinerary-items');
+      const emptyState = document.querySelector<HTMLElement>('#itinerary-empty');
+      const countLabels = document.querySelectorAll<HTMLElement>('[data-itinerary-count]');
+      const saveButtons = document.querySelectorAll<HTMLButtonElement>('[data-save-item]');
+
+      const readSaved = (): string[] => {
+        try {
+          const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];
+        } catch {
+          return [];
+        }
+      };
+
+      const writeSaved = (ids: string[]) => localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+
+      const updateButtons = (ids: string[]) => {
+        saveButtons.forEach((button) => {
+          const id = button.dataset.id;
+          const saved = id ? ids.includes(id) : false;
+          button.dataset.saved = String(saved);
+          if (saved) button.setAttribute('aria-pressed', 'true');
+          else button.setAttribute('aria-pressed', 'false');
+        });
+      };
+
+      const render = () => {
+        const ids = readSaved();
+        countLabels.forEach((node) => node.textContent = String(ids.length));
+        updateButtons(ids);
+        if (!itemsRoot || !emptyState) return;
+        itemsRoot.replaceChildren();
+        emptyState.classList.toggle('hidden', ids.length > 0);
+        ids.forEach((id, index) => {
+          const stop = allStops.find((item) => item.id === id);
+          if (!stop) return;
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-3 rounded-2xl border border-soil-700/15 bg-white p-4';
+          const number = document.createElement('span');
+          number.className = 'grid h-9 w-9 shrink-0 place-items-center rounded-full bg-leaf-100 text-sm font-black text-leaf-700';
+          number.textContent = String(index + 1).padStart(2, '0');
+          const text = document.createElement('div');
+          text.className = 'min-w-0 flex-1';
+          const name = document.createElement('p');
+          name.className = 'font-bold';
+          name.textContent = stop.name;
+          const meta = document.createElement('p');
+          meta.className = 'mt-1 text-xs text-soil-700';
+          meta.textContent = stop.meta;
+          text.append(name, meta);
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'rounded-full px-3 py-2 text-sm font-bold text-berry-700 hover:bg-berry-50';
+          remove.textContent = 'Remove';
+          remove.addEventListener('click', () => {
+            writeSaved(readSaved().filter((savedId) => savedId !== id));
+            render();
+          });
+          row.append(number, text, remove);
+          itemsRoot.append(row);
+        });
+      };
+
+      const openPanel = () => {
+        if (!panel || !backdrop) return;
+        panel.classList.remove('translate-x-full');
+        panel.setAttribute('aria-hidden', 'false');
+        backdrop.classList.remove('pointer-events-none', 'opacity-0');
+        backdrop.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        panel.querySelector<HTMLElement>('[data-itinerary-close]')?.focus();
+      };
+
+      const closePanel = () => {
+        if (!panel || !backdrop) return;
+        panel.classList.add('translate-x-full');
+        panel.setAttribute('aria-hidden', 'true');
+        backdrop.classList.add('pointer-events-none', 'opacity-0');
+        backdrop.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      };
+
+      document.querySelectorAll<HTMLButtonElement>('[data-itinerary-open]').forEach((button) => button.addEventListener('click', openPanel));
+      document.querySelectorAll<HTMLButtonElement>('[data-itinerary-close]').forEach((button) => button.addEventListener('click', closePanel));
+      backdrop?.addEventListener('click', closePanel);
+
+      saveButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const id = button.dataset.id;
+          if (!id) return;
+          const ids = readSaved();
+          writeSaved(ids.includes(id) ? ids.filter((savedId) => savedId !== id) : [...ids, id]);
+          render();
+        });
+      });
+
+      document.querySelector('#itinerary-clear')?.addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        render();
+      });
+
+      const galleryDialog = document.querySelector<HTMLDialogElement>('#gallery-dialog');
+      const galleryImage = document.querySelector<HTMLImageElement>('#gallery-dialog-image');
+      document.querySelectorAll<HTMLButtonElement>('[data-gallery-image]').forEach((button) => {
+        button.addEventListener('click', () => {
+          if (!galleryDialog || !galleryImage) return;
+          galleryImage.src = button.dataset.galleryImage || '';
+          galleryImage.alt = button.dataset.galleryAlt || '';
+          galleryDialog.showModal();
+        });
+      });
+      document.querySelector<HTMLButtonElement>('#gallery-close')?.addEventListener('click', () => {
+        galleryDialog?.close();
+      });
+      galleryDialog?.addEventListener('click', (event) => {
+        if (event.target === galleryDialog) galleryDialog.close();
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && panel?.getAttribute('aria-hidden') === 'false') closePanel();
+      });
+
+      render();
+    </script>
+  </body>
+</html>

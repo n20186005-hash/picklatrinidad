@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 128" role="img" aria-labelledby="title desc">
+  <title id="title">Strawberry Farm La Trinidad guide logo</title>
+  <desc id="desc">A strawberry shaped valley beneath Cordillera mountain leaves.</desc>
+  <g transform="translate(10 8)">
+    <path d="M58 26c14 0 30 12 35 25 7 18-5 45-35 66C28 96 16 69 23 51c5-13 21-25 35-25Z" fill="#d7433b"/>
+    <path d="M29 34 47 9l11 20L73 7l14 28c-19-8-39-8-58-1Z" fill="#49623b"/>
+    <g fill="#fff1c8">
+      <circle cx="43" cy="52" r="2.4"/><circle cx="61" cy="49" r="2.4"/><circle cx="76" cy="60" r="2.4"/>
+      <circle cx="50" cy="69" r="2.4"/><circle cx="67" cy="76" r="2.4"/><circle cx="55" cy="91" r="2.4"/>
+    </g>
+    <path d="M18 97c17-10 32-9 45 2 13-11 29-12 48-2" fill="none" stroke="#33472d" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g fill="#2d2b27">
+    <text x="138" y="58" font-family="Georgia, 'Times New Roman', serif" font-size="39" font-weight="700">Strawberry Farm</text>
+    <text x="140" y="91" font-family="Arial, sans-serif" font-size="20" letter-spacing="3.8" fill="#49623b">LA TRINIDAD · BENGUET</text>
+  </g>
+</svg>
