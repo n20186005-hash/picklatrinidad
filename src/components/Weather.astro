@@ -1,0 +1,311 @@
+---
+// Real-time conditions + multi-day outlook for the farm valley, turned into plain-language visitor advice.
+// Data is fetched in the browser from a public weather service and cached locally for a short window.
+const props = Astro.props as { latitude?: number; longitude?: number };
+const lat = props.latitude ?? 16.4580848;
+const lng = props.longitude ?? 120.5877882;
+---
+
+<section id="weather" class="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24" aria-labelledby="weather-heading">
+  <div class="max-w-3xl">
+    <p class="text-xs font-black uppercase tracking-[0.28em] text-berry-600">On the ground</p>
+    <h2 id="weather-heading" class="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">La Trinidad weather right now</h2>
+    <p class="mt-4 text-lg leading-8 text-soil-700">A Cordillera valley can shift fast between sun and drizzle. Check the current conditions and the next few days before you leave Baguio, and let the readout tell you what to pack.</p>
+  </div>
+
+  <div id="weather-widget" class="mt-10" data-lat={lat} data-lng={lng}>
+    <div class="rounded-[2.2rem] border border-soil-700/12 bg-white/55 p-8 shadow-[var(--shadow-soft)]">
+      <div class="flex items-center gap-3 text-soil-700">
+        <span class="h-4 w-4 animate-spin rounded-full border-2 border-soil-700/30 border-t-berry-500"></span>
+        <span class="text-sm font-semibold">Loading current conditions…</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  type WeatherPoint = {
+    time: string;
+    weather_code: number;
+    temperature_2m?: number;
+    apparent_temperature?: number;
+    relative_humidity_2m?: number;
+    precipitation?: number;
+    wind_speed_10m?: number;
+    uv_index?: number;
+    is_day?: number;
+    temperature_2m_max?: number;
+    temperature_2m_min?: number;
+    precipitation_probability_max?: number;
+  };
+
+  type WeatherResponse = {
+    current: WeatherPoint;
+    daily: {
+      time: string[];
+      weather_code: number[];
+      temperature_2m_max: number[];
+      temperature_2m_min: number[];
+      precipitation_probability_max: number[];
+    };
+  };
+
+  const CODE_LABELS: Record<number, { label: string; icon: string }> = {
+    0: { label: 'Clear sky', icon: '☀️' },
+    1: { label: 'Mainly clear', icon: '🌤️' },
+    2: { label: 'Partly cloudy', icon: '⛅' },
+    3: { label: 'Overcast', icon: '☁️' },
+    45: { label: 'Fog', icon: '🌫️' },
+    48: { label: 'Rime fog', icon: '🌫️' },
+    51: { label: 'Light drizzle', icon: '🌦️' },
+    53: { label: 'Drizzle', icon: '🌦️' },
+    55: { label: 'Dense drizzle', icon: '🌧️' },
+    56: { label: 'Freezing drizzle', icon: '🌧️' },
+    57: { label: 'Freezing drizzle', icon: '🌧️' },
+    61: { label: 'Light rain', icon: '🌦️' },
+    63: { label: 'Rain', icon: '🌧️' },
+    65: { label: 'Heavy rain', icon: '🌧️' },
+    66: { label: 'Freezing rain', icon: '🌧️' },
+    67: { label: 'Freezing rain', icon: '🌧️' },
+    71: { label: 'Light snow', icon: '🌨️' },
+    73: { label: 'Snow', icon: '🌨️' },
+    75: { label: 'Heavy snow', icon: '🌨️' },
+    77: { label: 'Snow grains', icon: '🌨️' },
+    80: { label: 'Rain showers', icon: '🌦️' },
+    81: { label: 'Rain showers', icon: '🌧️' },
+    82: { label: 'Violent showers', icon: '⛈️' },
+    85: { label: 'Snow showers', icon: '🌨️' },
+    86: { label: 'Snow showers', icon: '🌨️' },
+    95: { label: 'Thunderstorm', icon: '⛈️' },
+    96: { label: 'Thunderstorm + hail', icon: '⛈️' },
+    99: { label: 'Thunderstorm + hail', icon: '⛈️' }
+  };
+
+  const describe = (code: number) => CODE_LABELS[code] ?? { label: 'Mixed conditions', icon: '🌡️' };
+  const round = (n: number | undefined) => (n == null ? '—' : Math.round(n).toString());
+  const uniq = (arr: string[]) => Array.from(new Set(arr));
+
+  // Wind speed (km/h) → Beaufort level, the scale visitors recognise as "级".
+  const beaufort = (kmh: number) => {
+    const steps = [1, 5, 11, 19, 28, 38, 49, 61, 74, 88, 102, 117];
+    let level = 0;
+    for (let i = 0; i < steps.length; i++) if (kmh >= steps[i]) level = i + 1;
+    return level;
+  };
+  const windText = (kmh: number) => {
+    const b = beaufort(kmh);
+    if (b <= 2) return '微风';
+    if (b <= 4) return `${b}级`;
+    return `${b}级`;
+  };
+  const uvText = (uv: number) =>
+    uv < 3 ? '弱' : uv <= 5 ? '中等' : uv <= 7 ? '强' : uv <= 10 ? '很强' : '极强';
+
+  const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayLabel = (iso: string) => DAYS[new Date(iso + 'T00:00:00').getDay()];
+
+  // Turn raw readings into visitor-facing advice. Empty buckets are dropped at render time.
+  const advice = (cur: WeatherPoint, daily: WeatherResponse['daily']) => {
+    const code = cur.weather_code;
+    const hi = daily.temperature_2m_max[0];
+    const lo = daily.temperature_2m_min[0];
+    const chance = daily.precipitation_probability_max[0] ?? 0;
+    const b = beaufort(cur.wind_speed_10m ?? 0);
+    const uv = cur.uv_index;
+
+    const risks: string[] = [];
+    const outfit: string[] = [];
+    const play: string[] = [];
+    const items: string[] = [];
+
+    if (chance >= 60) {
+      play.push(`今天下雨概率约 ${chance}%，优先把采摘和拍照安排在棚下市场或室内休息区，户外行程可往后挪`);
+      items.push('雨伞 / 雨衣');
+    }
+    if ([51, 53, 55, 56, 57, 61, 80].includes(code)) {
+      play.push('有小雨，田埂和路面湿滑，走路注意防滑；露天体验一般');
+      items.push('折叠伞');
+    } else if ([63, 81].includes(code)) {
+      play.push('降雨明显，不建议长时间待在户外，高处或缆车类项目可能停运');
+      items.push('雨衣（风大不建议长柄伞）');
+    } else if ([65, 66, 67, 82].includes(code)) {
+      risks.push('降雨较强，避开山谷、低洼与陡坡地带，谨防山洪与滑坡');
+      play.push('不建议户外游玩，游船、缆车可能停运');
+      items.push('雨衣');
+    }
+    if (code >= 95) {
+      risks.push('谨防雷电，不要登山、不要在树下避雨，水上项目大概率关闭');
+    }
+    if (hi >= 32) {
+      outfit.push('气温较高，穿轻薄透气衣物');
+      play.push('尽量避开正午外出，缩短连续户外时间');
+      items.push('防晒、充足饮用水、防暑用品');
+    }
+    if (uv != null && uv >= 5) {
+      outfit.push('紫外线较强，注意防晒');
+      items.push('防晒霜、墨镜、遮阳帽');
+    }
+    if (hi - lo > 8) {
+      outfit.push('昼夜温差大，备一件外套方便增减衣物');
+    }
+    if (hi <= 10) {
+      outfit.push('气温偏低，注意防寒');
+      items.push('厚外套、围巾');
+    }
+    if (b >= 7) {
+      risks.push('大风天气，远离广告牌、高处与崖边');
+      play.push('户外高处项目大概率关闭');
+    } else if (b >= 5) {
+      play.push('风力偏大，帽子、遮阳帽容易被吹落，戴稳些');
+    }
+    if (code <= 1) {
+      outfit.push('天气晴好，适合户外游览');
+      play.push('适合看日出日落与山谷风景');
+      items.push('记得防晒');
+    } else if (code <= 3) {
+      play.push('光线柔和，很适合拍照，无暴晒适合长时间户外逛');
+    }
+    if (code === 45 || code === 48) {
+      risks.push('能见度差，不适合看山看景，航班与山路易受影响');
+      items.push('口罩');
+      play.push('雾天不适合观景，改在室内市场慢慢逛');
+    }
+
+    return {
+      risks: uniq(risks),
+      outfit: uniq(outfit),
+      play: uniq(play),
+      items: uniq(items)
+    };
+  };
+
+  const card = (title: string, icon: string, items: string[]) => `
+    <div class="rounded-[2rem] border border-soil-700/12 bg-white/55 p-6 shadow-[var(--shadow-soft)]">
+      <p class="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-berry-600"><span aria-hidden="true">${icon}</span>${title}</p>
+      <ul class="mt-3 space-y-2 text-sm leading-6 text-soil-700">
+        ${items.map((t) => `<li class="flex gap-2"><span aria-hidden="true" class="text-leaf-600">●</span><span>${t}</span></li>`).join('')}
+      </ul>
+    </div>`;
+
+  const render = (root: HTMLElement, data: WeatherResponse) => {
+    const cur = data.current;
+    const info = describe(cur.weather_code);
+    const hi = data.daily.temperature_2m_max[0];
+    const lo = data.daily.temperature_2m_min[0];
+    const chance = data.daily.precipitation_probability_max[0] ?? 0;
+    const uv = cur.uv_index;
+
+    const tip = advice(cur, data.daily);
+    const summary = `${info.label} · ${round(cur.temperature_2m)}°C（今日 ${round(lo)}–${round(hi)}°）· 风力${windText(cur.wind_speed_10m ?? 0)} · 降水概率 ${chance}%${uv != null ? ` · 紫外线${uvText(uv)}` : ''}`;
+
+    const days = data.daily.time
+      .slice(0, 7)
+      .map((iso, i) => {
+        const d = describe(data.daily.weather_code[i]);
+        return `
+          <li class="flex flex-col items-center gap-1 rounded-2xl bg-cream/70 px-3 py-4 text-center">
+            <span class="text-xs font-black uppercase tracking-wider text-soil-700">${dayLabel(iso)}</span>
+            <span class="text-2xl" aria-hidden="true">${d.icon}</span>
+            <span class="text-sm font-bold">${Math.round(data.daily.temperature_2m_max[i])}° / ${Math.round(data.daily.temperature_2m_min[i])}°</span>
+            <span class="text-xs text-soil-700">${data.daily.precipitation_probability_max[i]}% 💧</span>
+          </li>`;
+      })
+      .join('');
+
+    const riskBanner = tip.risks.length
+      ? `<div class="rounded-[2rem] border border-red-300 bg-red-50 p-5 shadow-[var(--shadow-soft)]">
+           <p class="flex items-start gap-2 text-sm font-bold text-red-700">
+             <span aria-hidden="true">⚠️</span>
+             <span>${tip.risks.join('；')}</span>
+           </p>
+         </div>`
+      : '';
+
+    const adviceGrid =
+      tip.outfit.length || tip.play.length || tip.items.length
+        ? `<div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+             ${tip.outfit.length ? card('出行穿搭', '🧥', tip.outfit) : ''}
+             ${tip.play.length ? card('游玩安排', '🗺️', tip.play) : ''}
+             ${tip.items.length ? card('随身物品', '🎒', tip.items) : ''}
+           </div>`
+        : '';
+
+    root.innerHTML = `
+      ${riskBanner}
+      <div class="mt-5 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div class="rounded-[2.2rem] border border-soil-700/12 bg-white/55 p-8 shadow-[var(--shadow-soft)]">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="text-sm font-semibold text-soil-700">${info.label}${cur.is_day === 0 ? ' · night' : ''}</p>
+              <p class="mt-1 font-display text-6xl font-bold text-ink">${round(cur.temperature_2m)}°<span class="text-3xl text-soil-700">C</span></p>
+              <p class="mt-1 text-sm text-soil-700">Feels like ${round(cur.apparent_temperature)}°C</p>
+            </div>
+            <span class="text-7xl" aria-hidden="true">${info.icon}</span>
+          </div>
+          <p class="mt-4 rounded-2xl bg-leaf-700/8 px-4 py-3 text-sm font-semibold text-ink">当前：${summary}</p>
+          <dl class="mt-5 grid grid-cols-3 gap-3 border-t border-soil-700/10 pt-5 text-sm">
+            <div><dt class="text-soil-700">Humidity</dt><dd class="mt-1 font-bold">${round(cur.relative_humidity_2m)}%</dd></div>
+            <div><dt class="text-soil-700">Wind</dt><dd class="mt-1 font-bold">${round(cur.wind_speed_10m)} km/h</dd></div>
+            <div><dt class="text-soil-700">Rain now</dt><dd class="mt-1 font-bold">${round(cur.precipitation)} mm</dd></div>
+          </dl>
+        </div>
+        <div class="rounded-[2.2rem] border border-soil-700/12 bg-white/55 p-8 shadow-[var(--shadow-soft)]">
+          <p class="text-sm font-black uppercase tracking-wider text-berry-600">Next 7 days</p>
+          <ul class="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-7 lg:grid-cols-4 xl:grid-cols-7">${days}</ul>
+        </div>
+      </div>
+      ${adviceGrid}`;
+  };
+
+  const showError = (root: HTMLElement) => {
+    root.innerHTML = `
+      <div class="rounded-[2.2rem] border border-soil-700/12 bg-white/55 p-8 shadow-[var(--shadow-soft)]">
+        <p class="text-sm font-semibold text-soil-700">The live weather feed is briefly unavailable. Check a weather app for La Trinidad, Benguet before you travel, and expect cool, changeable Cordillera conditions.</p>
+      </div>`;
+  };
+
+  const load = async () => {
+    const root = document.getElementById('weather-widget');
+    if (!root) return;
+    const lat = root.dataset.lat;
+    const lng = root.dataset.lng;
+    if (!lat || !lng) return;
+
+    const cacheKey = `lt-weather-${lat}-${lng}`;
+    const ttl = 30 * 60 * 1000;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as { ts: number; data: WeatherResponse };
+        if (Date.now() - parsed.ts < ttl) {
+          render(root, parsed.data);
+          return;
+        }
+      }
+    } catch {
+      // ignore cache read errors
+    }
+
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
+      `&current=weather_code,temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,is_day,wind_speed_10m,uv_index` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+      `&timezone=Asia/Manila&forecast_days=7`;
+
+    try {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('bad response');
+      const data = (await res.json()) as WeatherResponse;
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+      } catch {
+        // ignore cache write errors
+      }
+      render(root, data);
+    } catch {
+      showError(root);
+    }
+  };
+
+  load();
+</script>
